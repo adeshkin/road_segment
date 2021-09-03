@@ -1,0 +1,12 @@
+project_name: 'road_segment'
+image_dir: 'data/Images'
+train_filepath: 'data/Train.csv'
+test_filepath: 'data/Test.csv'
+checkpoint_dir: 'checkpoints'
+submission_dir: 'submissions'
+submission_filename: 'resnet_50'
+model_filename: 'resnet_50'
+test_size: 0.2
+batch_size: 4
+device: 'cuda'
+num_epochs: 15

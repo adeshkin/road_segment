@@ -2,3 +2,10 @@ jupyter
 opencv-python
 numpy
 matplotlib
+pandas
+torch
+torchvision
+albumentations
+wandb
+tqdm
+scikit-learn
