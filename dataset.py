@@ -43,4 +43,4 @@ class RoadSegmentTest(torch.utils.data.Dataset):
         if self.transform:
             image = self.transform(image=img)["image"]
 
-        return image
+        return image, image_id

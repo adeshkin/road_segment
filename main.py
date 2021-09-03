@@ -71,7 +71,8 @@ class Runner:
                                                 shuffle=False,
                                                 num_workers=1)}
 
-        self.model = torchvision.models.resnet50(pretrained=True, num_classes=1)
+        self.model = torchvision.models.resnet50(pretrained=True)
+        self.model.fc = nn.Linear(self.model.fc.in_features, 1)
         self.device = torch.device(params['device'])
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=params["lr"])
@@ -90,7 +91,7 @@ class Runner:
             labels = labels.to(self.device).float().view(-1, 1)
 
             pred_labels = self.model(images)
-            loss = self.model(pred_labels, labels)
+            loss = self.criterion(pred_labels, labels)
             accuracy = calculate_accuracy(pred_labels, labels)
 
             self.optimizer.zero_grad()
@@ -98,7 +99,7 @@ class Runner:
             self.optimizer.step()
 
             epoch_metrics['loss'] += loss.cpu().detach()
-            epoch_metrics['acc'] += accuracy.cpu().detach()
+            epoch_metrics['acc'] += accuracy
 
         for m in epoch_metrics:
             epoch_metrics[m] = epoch_metrics[m] / len(self.data_loaders['train'])
@@ -116,11 +117,11 @@ class Runner:
                 labels = labels.to(self.device).float().view(-1, 1)
 
                 pred_labels = self.model(images)
-                loss = self.model(pred_labels, labels)
+                loss = self.criterion(pred_labels, labels)
                 accuracy = calculate_accuracy(pred_labels, labels)
 
                 epoch_metrics['loss'] += loss.cpu().detach()
-                epoch_metrics['acc'] += accuracy.cpu().detach()
+                epoch_metrics['acc'] += accuracy
 
         for m in epoch_metrics:
             epoch_metrics[m] = epoch_metrics[m] / len(self.data_loaders['val'])
@@ -134,13 +135,14 @@ class Runner:
         self.model.eval()
         results = []
         with torch.no_grad():
-            for images, image_ids in tqdm(self.data_loaders['test']):
-                pred_labels = self.model(images)
-                for image_id, pred_label in zip(image_ids, pred_labels):
-                    row_dict = {}
-                    row_dict["Image_ID"] = image_id
-                    row_dict["Target"] = pred_label
-                    results.append(row_dict)
+            for image, image_id in tqdm(self.data_loaders['test']):
+                image = image.to(self.device)
+                pred_label = torch.sigmoid(self.model(image))
+                pred_label = pred_label.cpu().item()
+                row_dict = {}
+                row_dict["Image_ID"] = image_id[0]
+                row_dict["Target"] = pred_label
+                results.append(row_dict)
 
         df = pd.DataFrame(results)
         df.to_csv(f"{self.submissions_dir}/{self.params['submission_filename']}.csv", index=False)
@@ -181,5 +183,5 @@ if __name__ == '__main__':
         params = yaml.load(file, yaml.Loader)
 
     runner = Runner(params)
-    runner.run()
-    # runner.predict()
+    # runner.run()
+    runner.predict()
