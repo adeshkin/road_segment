@@ -146,16 +146,16 @@ class Runner:
                 results.append(row_dict)
 
         df = pd.DataFrame(results)
-        df.to_csv(f"{self.submissions_dir}/{self.run_name}.csv", index=False)
+        df.to_csv(f"{self.submissions_dir}/{self.params['arch']}_{self.run_name}.csv", index=False)
 
     def run(self):
         random.seed(42)
         np.random.seed(42)
-        #torch.manual_seed(42)
-        #torch.cuda.manual_seed_all(42)
+        torch.manual_seed(42)
+        torch.cuda.manual_seed_all(42)
 
-        #torch.backends.cudnn.benchmark = False
-        #torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = True
 
         wandb.init(project=self.params['project_name'], config=self.params)
         self.run_name = wandb.run.name
