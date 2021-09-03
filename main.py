@@ -26,6 +26,7 @@ def calculate_accuracy(output, target):
 class Runner:
     def __init__(self, params):
         self.params = params
+        self.run_name = None
         train_transform = A.Compose([
             A.HorizontalFlip(p=0.5),
             A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.05, rotate_limit=15, p=0.5),
@@ -59,19 +60,19 @@ class Runner:
         self.data_loaders = {'train': DataLoader(dataset_train,
                                                  batch_size=params['batch_size'],
                                                  shuffle=True,
-                                                 num_workers=params['batch_size']),
+                                                 num_workers=4),
 
                              'val': DataLoader(dataset_val,
                                                batch_size=params['batch_size'],
                                                shuffle=False,
-                                               num_workers=params['batch_size']),
+                                               num_workers=4),
 
                              'test': DataLoader(dataset_test,
                                                 batch_size=1,
                                                 shuffle=False,
                                                 num_workers=1)}
 
-        self.model = torchvision.models.resnet50(pretrained=True)
+        self.model = torchvision.models.__dict__[params['arch']](pretrained=True)
         self.model.fc = nn.Linear(self.model.fc.in_features, 1)
         self.device = torch.device(params['device'])
 
@@ -129,9 +130,9 @@ class Runner:
         return epoch_metrics
 
     def predict(self):
-        PATH = f"{self.checkpoints_dir}/{self.params['model_filename']}.pth"
-        self.model.load_state_dict(torch.load(PATH))
-        self.model.to(self.device)
+        #PATH = f"{self.checkpoints_dir}/{self.params['model_filename']}.pth"
+        #self.model.load_state_dict(torch.load(PATH))
+        #self.model.to(self.device)
         self.model.eval()
         results = []
         with torch.no_grad():
@@ -145,13 +146,19 @@ class Runner:
                 results.append(row_dict)
 
         df = pd.DataFrame(results)
-        df.to_csv(f"{self.submissions_dir}/{self.params['submission_filename']}.csv", index=False)
+        df.to_csv(f"{self.submissions_dir}/{self.run_name}.csv", index=False)
 
     def run(self):
         random.seed(42)
         np.random.seed(42)
+        #torch.manual_seed(42)
+        #torch.cuda.manual_seed_all(42)
+
+        #torch.backends.cudnn.benchmark = False
+        #torch.backends.cudnn.deterministic = True
 
         wandb.init(project=self.params['project_name'], config=self.params)
+        self.run_name = wandb.run.name
 
         os.makedirs(self.checkpoints_dir, exist_ok=True)
         os.makedirs(self.submissions_dir, exist_ok=True)
@@ -175,7 +182,8 @@ class Runner:
                 best_model_wts = copy.deepcopy(self.model.state_dict())
 
         self.model.load_state_dict(best_model_wts)
-        torch.save(self.model.state_dict(), f"{self.checkpoints_dir}/{self.params['model_filename']}.pth")
+        self.predict()
+        torch.save(self.model.state_dict(), f"{self.checkpoints_dir}/{self.run_name}.pth")
 
 
 if __name__ == '__main__':
@@ -183,5 +191,5 @@ if __name__ == '__main__':
         params = yaml.load(file, yaml.Loader)
 
     runner = Runner(params)
-    # runner.run()
-    runner.predict()
+    runner.run()
+    # runner.predict()
