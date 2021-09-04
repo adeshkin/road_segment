@@ -7,6 +7,13 @@ import matplotlib.pyplot as plt
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 from sklearn.model_selection import train_test_split
+from sklearn import metrics
+
+
+def calculate_auc_score(output, target):
+    fpr, tpr, thresholds = metrics.roc_curve(target, output, pos_label=1)
+    auc = metrics.auc(fpr, tpr)
+    return auc
 
 
 def calculate_accuracy(output, target):
@@ -19,14 +26,17 @@ def get_transform():
     transforms = dict()
     train_transform = A.Compose([
         A.HorizontalFlip(p=0.5),
-        A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=45, p=0.5),
+        A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=90, p=0.5),
+        A.CoarseDropout(min_height=32, max_height=48, min_width=32, max_width=48, p=0.5),
+        A.GaussNoise(var_limit=(10, 50), p=0.5),
         A.RGBShift(r_shift_limit=15, g_shift_limit=15, b_shift_limit=15, p=0.5),
-        A.RandomBrightnessContrast(p=0.5),
+        A.Equalize(p=1),
         A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         ToTensorV2(),
     ])
 
     val_transform = A.Compose([
+        A.Equalize(p=1),
         A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         ToTensorV2()
     ])
@@ -50,7 +60,7 @@ def show_random(df, image_dir):
     plt.show()
 
 
-def visualize_augmentations(dataset, idx=None, samples=9, cols=3):
+def visualize_augmentations(dataset, sample=None, samples=9, cols=3):
     # https://albumentations.ai/docs/examples/pytorch_classification/
     random.seed(42)
     dataset = copy.deepcopy(dataset)
@@ -58,8 +68,10 @@ def visualize_augmentations(dataset, idx=None, samples=9, cols=3):
     rows = samples // cols
     figure, ax = plt.subplots(nrows=rows, ncols=cols, figsize=(15, 8))
     for i in range(samples):
-        if idx is None:
+        if sample is None:
             idx = random.randint(0, len(dataset))
+        else:
+            idx = sample
         image, label = dataset[idx]
         ax.ravel()[i].imshow(image)
         ax.ravel()[i].set_axis_off()

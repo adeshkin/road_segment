@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 
 from dataset import RoadSegment, RoadSegmentTest
-from utils import calculate_accuracy, get_transform, read_data
+from utils import calculate_accuracy, get_transform, read_data, calculate_auc_score
 
 
 class Runner:
@@ -61,6 +61,7 @@ class Runner:
         epoch_metrics = dict()
         epoch_metrics['loss'] = 0.0
         epoch_metrics['acc'] = 0.0
+        epoch_metrics['auc'] = 0.0
         for images, labels in tqdm(self.data_loaders['train']):
             images = images.to(self.device)
             labels = labels.to(self.device).float().view(-1, 1)
@@ -68,6 +69,7 @@ class Runner:
             pred_labels = self.model(images)
             loss = self.criterion(pred_labels, labels)
             accuracy = calculate_accuracy(pred_labels, labels)
+            auc = calculate_auc_score(pred_labels.cpu().detach().numpy(), labels.cpu().numpy())
 
             self.optimizer.zero_grad()
             loss.backward()
@@ -75,6 +77,7 @@ class Runner:
 
             epoch_metrics['loss'] += loss.cpu().detach()
             epoch_metrics['acc'] += accuracy
+            epoch_metrics['auc'] += auc
 
         for m in epoch_metrics:
             epoch_metrics[m] = epoch_metrics[m] / len(self.data_loaders['train'])
@@ -85,6 +88,7 @@ class Runner:
         epoch_metrics = dict()
         epoch_metrics['loss'] = 0.0
         epoch_metrics['acc'] = 0.0
+        epoch_metrics['auc'] = 0.0
         self.model.eval()
         with torch.no_grad():
             for images, labels in tqdm(self.data_loaders['val']):
@@ -94,9 +98,11 @@ class Runner:
                 pred_labels = self.model(images)
                 loss = self.criterion(pred_labels, labels)
                 accuracy = calculate_accuracy(pred_labels, labels)
+                auc = calculate_auc_score(pred_labels.cpu().detach().numpy(), labels.cpu().numpy())
 
                 epoch_metrics['loss'] += loss.cpu().detach()
                 epoch_metrics['acc'] += accuracy
+                epoch_metrics['auc'] += auc
 
         for m in epoch_metrics:
             epoch_metrics[m] = epoch_metrics[m] / len(self.data_loaders['val'])
