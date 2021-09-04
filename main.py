@@ -10,36 +10,17 @@ import torchvision
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-import albumentations as A
-from albumentations.pytorch.transforms import ToTensorV2
+
 from sklearn.model_selection import train_test_split
 
 from dataset import RoadSegment, RoadSegmentTest
-
-
-def calculate_accuracy(output, target):
-    output = torch.sigmoid(output) >= 0.5
-    target = target == 1.0
-    return torch.true_divide((target == output).sum(dim=0), output.size(0)).item()
+from utils import calculate_accuracy, get_transform
 
 
 class Runner:
     def __init__(self, params):
         self.params = params
         self.run_name = None
-        train_transform = A.Compose([
-            A.HorizontalFlip(p=0.5),
-            A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.05, rotate_limit=15, p=0.5),
-            A.RGBShift(r_shift_limit=15, g_shift_limit=15, b_shift_limit=15, p=0.5),
-            A.RandomBrightnessContrast(p=0.5),
-            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            ToTensorV2(),
-        ])
-
-        val_transform = A.Compose([
-            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            ToTensorV2()
-        ])
 
         df = pd.read_csv(params['train_filepath'])
         test_df = pd.read_csv(params['test_filepath'])
@@ -47,15 +28,17 @@ class Runner:
         image_ids = df['Image_ID'].tolist()
         labels = df['Target'].tolist()
 
-        train_ids, valid_ids = train_test_split(image_ids, test_size=params['test_size'], random_state=42,
-                                                stratify=labels)
+        train_ids, valid_ids = train_test_split(image_ids, test_size=params['test_size'],
+                                                random_state=42, stratify=labels)
 
         train_df = df[df['Image_ID'].isin(train_ids)]
         val_df = df[df['Image_ID'].isin(valid_ids)]
 
-        dataset_train = RoadSegment(train_df, params['image_dir'], train_transform)
-        dataset_val = RoadSegment(val_df, params['image_dir'], val_transform)
-        dataset_test = RoadSegmentTest(test_df, params['image_dir'], val_transform)
+        transforms = get_transform()
+
+        dataset_train = RoadSegment(train_df, params['image_dir'], transforms['train'])
+        dataset_val = RoadSegment(val_df, params['image_dir'], transforms['val'])
+        dataset_test = RoadSegmentTest(test_df, params['image_dir'], transforms['val'])
 
         self.data_loaders = {'train': DataLoader(dataset_train,
                                                  batch_size=params['batch_size'],
@@ -82,14 +65,6 @@ class Runner:
 
         self.checkpoints_dir = params['checkpoint_dir']
         self.submissions_dir = params['submission_dir']
-
-        self.ensemble_models = []
-        for arch, path in zip(['resnet18', 'resnet18', 'resnet18', 'resnet18'],
-                              ['efficient-rain-11', 'major-water-8', 'polished-puddle-10', 'twilight-paper-9']):
-            model = torchvision.models.__dict__[arch](pretrained=False)
-            model.fc = nn.Linear(model.fc.in_features, 1)
-            model.load_state_dict(torch.load(f"{self.checkpoints_dir}/{path}.pth"))
-            self.ensemble_models.append(model)
 
     def train(self):
         self.model.train()
@@ -160,10 +135,15 @@ class Runner:
 
     def predict_ensemble(self):
         models = []
-        for model in self.ensemble_models:
+        for arch, path in zip(['resnet18', 'resnet18', 'resnet18', 'resnet18'],
+                              ['efficient-rain-11', 'major-water-8', 'polished-puddle-10', 'twilight-paper-9']):
+            model = torchvision.models.__dict__[arch](pretrained=False)
+            model.fc = nn.Linear(model.fc.in_features, 1)
+            model.load_state_dict(torch.load(f"{self.checkpoints_dir}/{path}.pth"))
             model.to(self.device)
             model.eval()
             models.append(model)
+
         results = []
         with torch.no_grad():
             for image, image_id in tqdm(self.data_loaders['test']):
@@ -225,5 +205,5 @@ if __name__ == '__main__':
         params = yaml.load(file, yaml.Loader)
 
     runner = Runner(params)
-    # runner.run()
-    runner.predict_ensemble()
+    runner.run()
+    #runner.predict_ensemble()

@@ -4,7 +4,7 @@ train_filepath: 'data/Train.csv'
 test_filepath: 'data/Test.csv'
 checkpoint_dir: 'checkpoints'
 submission_dir: 'submissions'
-arch: 'resnext101_32x8d'
+arch: 'resnet34'
 test_size: 0.2
 batch_size: 16
 device: 'cuda'
