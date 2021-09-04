@@ -133,8 +133,8 @@ class Runner:
 
     def predict_ensemble(self):
         models = []
-        for arch, path in zip(['resnet18', 'resnet18', 'resnet18'],
-                              ['lucky-waterfall-18', 'major-pine-19', 'zany-donkey-20']):
+        for arch, path in zip(['resnet18', 'resnet18'],
+                              ['major-pine-19', 'zany-donkey-20']):
             model = torchvision.models.__dict__[arch](pretrained=False)
             model.fc = nn.Linear(model.fc.in_features, 1)
             model.load_state_dict(torch.load(f"{self.checkpoints_dir}/{path}.pth"))
@@ -146,19 +146,25 @@ class Runner:
         with torch.no_grad():
             for image, image_id in tqdm(self.data_loaders['test']):
                 image = image.to(self.device)
-                ensemble_label = []
+                # ensemble_label = []
+                ensemble_label = 1.0
+                count = 0
                 for model in models:
                     pred_label = torch.sigmoid(model(image))
                     pred_label = pred_label.cpu().item()
-                    ensemble_label.append(pred_label)
-                prediction = sum(ensemble_label) / len(ensemble_label)
+                    # ensemble_label.append(pred_label)
+                    ensemble_label *= pred_label
+                    count += 1
+
+                # prediction = sum(ensemble_label) / len(ensemble_label)
+                prediction = np.power(ensemble_label, 1./count)
                 row_dict = {}
                 row_dict["Image_ID"] = image_id[0]
                 row_dict["Target"] = prediction
                 results.append(row_dict)
 
         df = pd.DataFrame(results)
-        df.to_csv(f"{self.submissions_dir}/ensemble_3x_resnet18_runs_18_19_20.csv", index=False)
+        df.to_csv(f"{self.submissions_dir}/ensemble_2x_resnet18_runs_19_20.csv", index=False)
 
     def run(self):
         random.seed(42)
