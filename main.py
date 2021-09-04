@@ -11,10 +11,9 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from sklearn.model_selection import train_test_split
 
 from dataset import RoadSegment, RoadSegmentTest
-from utils import calculate_accuracy, get_transform
+from utils import calculate_accuracy, get_transform, read_data
 
 
 class Runner:
@@ -22,17 +21,7 @@ class Runner:
         self.params = params
         self.run_name = None
 
-        df = pd.read_csv(params['train_filepath'])
-        test_df = pd.read_csv(params['test_filepath'])
-
-        image_ids = df['Image_ID'].tolist()
-        labels = df['Target'].tolist()
-
-        train_ids, valid_ids = train_test_split(image_ids, test_size=params['test_size'],
-                                                random_state=42, stratify=labels)
-
-        train_df = df[df['Image_ID'].isin(train_ids)]
-        val_df = df[df['Image_ID'].isin(valid_ids)]
+        train_df, val_df, test_df = read_data(params)
 
         transforms = get_transform()
 

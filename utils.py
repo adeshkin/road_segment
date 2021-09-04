@@ -1,10 +1,12 @@
 import torch
 import cv2
 import random
+import pandas as pd
 import copy
 import matplotlib.pyplot as plt
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
+from sklearn.model_selection import train_test_split
 
 
 def calculate_accuracy(output, target):
@@ -64,3 +66,19 @@ def visualize_augmentations(dataset, idx=None, samples=9, cols=3):
         ax.ravel()[i].set_title(label)
     plt.tight_layout()
     plt.show()
+
+
+def read_data(params):
+    df = pd.read_csv(params['train_filepath'])
+    test_df = pd.read_csv(params['test_filepath'])
+
+    image_ids = df['Image_ID'].tolist()
+    labels = df['Target'].tolist()
+
+    train_ids, valid_ids = train_test_split(image_ids, test_size=params['test_size'],
+                                            random_state=42, stratify=labels)
+
+    train_df = df[df['Image_ID'].isin(train_ids)]
+    val_df = df[df['Image_ID'].isin(valid_ids)]
+
+    return train_df, val_df, test_df
