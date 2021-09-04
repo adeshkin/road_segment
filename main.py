@@ -74,12 +74,22 @@ class Runner:
 
         self.model = torchvision.models.__dict__[params['arch']](pretrained=True)
         self.model.fc = nn.Linear(self.model.fc.in_features, 1)
+
         self.device = torch.device(params['device'])
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=params["lr"])
         self.criterion = nn.BCEWithLogitsLoss()
+
         self.checkpoints_dir = params['checkpoint_dir']
         self.submissions_dir = params['submission_dir']
+
+        self.ensemble_models = []
+        for arch, path in zip(['resnext101_32x8d', 'resnet18', 'resnet18'],
+                              ['sweet-microwave-12', 'efficient-rain-11', 'major-water-8']):
+            model = torchvision.models.__dict__[arch](pretrained=False)
+            model.fc = nn.Linear(model.fc.in_features, 1)
+            model.load_state_dict(torch.load(f"{self.checkpoints_dir}/{path}.pth"))
+            self.ensemble_models.append(model)
 
     def train(self):
         self.model.train()
@@ -148,6 +158,30 @@ class Runner:
         df = pd.DataFrame(results)
         df.to_csv(f"{self.submissions_dir}/{self.params['arch']}_{self.run_name}.csv", index=False)
 
+    def predict_ensemble(self):
+        models = []
+        for model in self.ensemble_models:
+            model.to(self.device)
+            model.eval()
+            models.append(model)
+        results = []
+        with torch.no_grad():
+            for image, image_id in tqdm(self.data_loaders['test']):
+                image = image.to(self.device)
+                ensemble_label = []
+                for model in models:
+                    pred_label = torch.sigmoid(model(image))
+                    pred_label = pred_label.cpu().item()
+                    ensemble_label.append(pred_label)
+                prediction = sum(ensemble_label) / len(ensemble_label)
+                row_dict = {}
+                row_dict["Image_ID"] = image_id[0]
+                row_dict["Target"] = prediction
+                results.append(row_dict)
+
+        df = pd.DataFrame(results)
+        df.to_csv(f"{self.submissions_dir}/ensemble_3.csv", index=False)
+
     def run(self):
         random.seed(42)
         np.random.seed(42)
@@ -191,5 +225,5 @@ if __name__ == '__main__':
         params = yaml.load(file, yaml.Loader)
 
     runner = Runner(params)
-    runner.run()
-    # runner.predict()
+    # runner.run()
+    runner.predict_ensemble()
