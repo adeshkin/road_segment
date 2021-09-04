@@ -50,6 +50,9 @@ class Runner:
         self.device = torch.device(params['device'])
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=params["lr"])
+        self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer,
+                                                            step_size=params['lr_scheduler']['step_size'],
+                                                            gamma=params['lr_scheduler']['gamma'])
         self.criterion = nn.BCEWithLogitsLoss()
 
         self.checkpoints_dir = params['checkpoint_dir']
@@ -178,10 +181,12 @@ class Runner:
         self.model = self.model.to(self.device)
         for epoch in range(params['num_epochs']):
             train_metrics = self.train()
+            self.lr_scheduler.step()
             val_metrics = self.eval()
 
             logs = {'train': train_metrics,
-                    'val': val_metrics}
+                    'val': val_metrics,
+                    'lr': self.optimizer.param_groups[0]["lr"]}
 
             wandb.log(logs, step=epoch)
 
