@@ -173,7 +173,7 @@ class Runner:
         os.makedirs(self.submissions_dir, exist_ok=True)
 
         best_model_wts = copy.deepcopy(self.model.state_dict())
-        best_acc = 0.
+        best_auc = 0.
 
         self.model = self.model.to(self.device)
         for epoch in range(params['num_epochs']):
@@ -185,9 +185,9 @@ class Runner:
 
             wandb.log(logs, step=epoch)
 
-            current_val_acc = val_metrics['acc']
-            if current_val_acc > best_acc:
-                best_acc = current_val_acc
+            current_val_auc = val_metrics['auc']
+            if current_val_auc > best_auc:
+                best_auc = current_val_auc
                 best_model_wts = copy.deepcopy(self.model.state_dict())
 
         self.model.load_state_dict(best_model_wts)
