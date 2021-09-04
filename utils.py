@@ -1,4 +1,8 @@
 import torch
+import cv2
+import random
+import copy
+import matplotlib.pyplot as plt
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 
@@ -29,3 +33,34 @@ def get_transform():
     transforms['val'] = val_transform
 
     return transforms
+
+
+def show_random(df, image_dir):
+    fig, axs = plt.subplots(2, 3, figsize=(15, 8))
+
+    for ax in axs.ravel():
+        filename, label = df.sample().values[0]
+        img = cv2.imread(f'{image_dir}/{filename}.tif', cv2.IMREAD_COLOR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        ax.imshow(img)
+        ax.set_title(label)
+
+    plt.show()
+
+
+def visualize_augmentations(dataset, idx=None, samples=9, cols=3):
+    # https://albumentations.ai/docs/examples/pytorch_classification/
+    random.seed(42)
+    dataset = copy.deepcopy(dataset)
+    dataset.transform = A.Compose([t for t in dataset.transform if not isinstance(t, (A.Normalize, ToTensorV2))])
+    rows = samples // cols
+    figure, ax = plt.subplots(nrows=rows, ncols=cols, figsize=(15, 8))
+    for i in range(samples):
+        if idx is None:
+            idx = random.randint(0, len(dataset))
+        image, label = dataset[idx]
+        ax.ravel()[i].imshow(image)
+        ax.ravel()[i].set_axis_off()
+        ax.ravel()[i].set_title(label)
+    plt.tight_layout()
+    plt.show()
