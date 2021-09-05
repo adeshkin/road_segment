@@ -168,7 +168,7 @@ class Runner:
     def predict_ensemble(self):
         models = []
         for arch, path in zip(['efficientnet-b1', 'efficientnet-b1', 'efficientnet-b1', 'efficientnet-b1', 'efficientnet-b1'],
-                              ['light-mountain-5', 'driven-glade-7', 'visionary-dawn-9', 'icy-oath-11', 'serene-fire-13']):
+                              ['honest-violet-5', 'driven-glade-7', 'visionary-dawn-9', 'icy-oath-11', 'serene-fire-13']):
             if 'resnet' in arch:
                 model = torchvision.models.__dict__[arch]()
                 model.fc = nn.Linear(model.fc.in_features, 1)
