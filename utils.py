@@ -20,6 +20,7 @@ def set_seed(seed=42):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
 
+
 def calculate_auc_score(output, target):
     fpr, tpr, thresholds = metrics.roc_curve(target, output, pos_label=1)
     auc = metrics.auc(fpr, tpr)
