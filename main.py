@@ -50,9 +50,9 @@ class Runner:
         self.device = torch.device(params['device'])
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=params["lr"])
-        #self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer,
-        #                                                    step_size=params['lr_scheduler']['step_size'],
-        #                                                    gamma=params['lr_scheduler']['gamma'])
+        self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer,
+                                                            step_size=params['lr_scheduler']['step_size'],
+                                                            gamma=params['lr_scheduler']['gamma'])
         self.criterion = nn.BCEWithLogitsLoss()
 
         self.checkpoints_dir = params['checkpoint_dir']
