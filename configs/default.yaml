@@ -10,7 +10,7 @@ batch_size: 20
 device: 'cuda'
 num_epochs: 24
 lr: 0.001
-ensemble_mode: 'mean' # geom
+ensemble_mode: 'geom' # geom
 lr_scheduler:
   step_size: 10
   gamma: 0.1
