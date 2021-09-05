@@ -84,7 +84,7 @@ class Runner:
 
         return epoch_metrics
 
-    def predict(self, k_fold):
+    def predict(self):
         self.model.eval()
         results = []
         with torch.no_grad():
@@ -98,7 +98,7 @@ class Runner:
                 results.append(row_dict)
 
         df = pd.DataFrame(results)
-        df.to_csv(f"{self.submissions_dir}/{self.params['arch']}_{self.run_name}_{k_fold}.csv", index=False)
+        df.to_csv(f"{self.submissions_dir}/{self.params['arch']}_{self.run_name}.csv", index=False)
 
     def run_folds(self):
         set_seed()
@@ -114,9 +114,8 @@ class Runner:
         skf = StratifiedKFold(n_splits=self.params['num_splits'], shuffle=True, random_state=42)
 
         for k_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
-            wandb.init(project=self.params['project_name'], config=self.params)
-            self.run_name = wandb.run.name
-
+            run = wandb.init(project=self.params['project_name'], config=self.params, reinit=True)
+            self.run_name = run.name
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             dataset_train = RoadSegmentFolds(X_train, y_train, self.params['image_dir'], transforms['train'])
@@ -147,8 +146,8 @@ class Runner:
                 train_metrics = self.train()
                 val_metrics = self.eval()
 
-                logs = {f'train_{k_fold}': train_metrics,
-                        f'val_{k_fold}': val_metrics}
+                logs = {f'train': train_metrics,
+                        f'val': val_metrics}
 
                 wandb.log(logs, step=epoch)
 
@@ -158,8 +157,9 @@ class Runner:
                     best_model_wts = copy.deepcopy(self.model.state_dict())
 
             self.model.load_state_dict(best_model_wts)
-            torch.save(self.model.state_dict(), f"{self.checkpoints_dir}/{self.run_name}_{k_fold}.pth")
-            self.predict(k_fold)
+            torch.save(self.model.state_dict(), f"{self.checkpoints_dir}/{self.run_name}.pth")
+            self.predict()
+            run.finish()
 
     def predict_ensemble(self):
         models = []
