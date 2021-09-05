@@ -174,6 +174,7 @@ class Runner:
                 model.fc = nn.Linear(model.fc.in_features, 1)
             elif 'efficientnet' in arch:
                 model = EfficientNet.from_pretrained(arch)
+                EfficientNet
                 model._fc = nn.Linear(in_features=model._fc.in_features, out_features=1, bias=True)
 
             model.load_state_dict(torch.load(f"{self.checkpoints_dir}/{path}.pth"))
