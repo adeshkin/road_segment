@@ -167,8 +167,8 @@ class Runner:
 
     def predict_ensemble(self):
         models = []
-        for arch, path in zip(['resnet34', 'resnet34', 'resnet34', 'resnet34', 'resnet34'],
-                              ['jumping-hill-10', 'dauntless-cloud-9', 'different-blaze-8', 'valiant-donkey-7', 'lilac-sponge-6']):
+        for arch, path in zip(['resnet50', 'resnet50', 'resnet50', 'resnet50', 'resnet50'],
+                              ['light-mountain-5', 'desert-jazz-4', 'solar-valley-3', 'spring-silence-2', 'swept-serenity-1']):
             if 'resnet' in arch:
                 model = torchvision.models.__dict__[arch]()
                 model.fc = nn.Linear(model.fc.in_features, 1)
@@ -210,7 +210,7 @@ class Runner:
                 results.append(row_dict)
 
         df = pd.DataFrame(results)
-        df.to_csv(f"{self.submissions_dir}/ensemble_5x_resnet34_runs_6_10_lr_sched_{self.params['ensemble_mode']}.csv", index=False)
+        df.to_csv(f"{self.submissions_dir}/ensemble_5x_resnet50_runs_1_5_lr_sched_aug_{self.params['ensemble_mode']}.csv", index=False)
 
     def run(self):
         random.seed(42)
@@ -258,6 +258,6 @@ if __name__ == '__main__':
         params = yaml.load(file, yaml.Loader)
 
     runner = Runner(params)
-    runner.run_folds()
+    #runner.run_folds()
     # runner.run()
-    #runner.predict_ensemble()
+    runner.predict_ensemble()
