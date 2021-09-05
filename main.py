@@ -133,8 +133,8 @@ class Runner:
 
     def predict_ensemble(self):
         models = []
-        for arch, path in zip(['resnet18', 'resnet18', 'resnet18', 'resnet18'],
-                              ['efficient-rain-11', 'major-water-8', 'polished-puddle-10', 'twilight-paper-9']):
+        for arch, path in zip(['resnet18', 'resnet18', 'resnet18'],
+                              ['major-pine-19', 'fiery-sound-29', 'chocolate-waterfall-31']):
             model = torchvision.models.__dict__[arch](pretrained=False)
             model.fc = nn.Linear(model.fc.in_features, 1)
             model.load_state_dict(torch.load(f"{self.checkpoints_dir}/{path}.pth"))
@@ -164,7 +164,7 @@ class Runner:
                 results.append(row_dict)
 
         df = pd.DataFrame(results)
-        df.to_csv(f"{self.submissions_dir}/ensemble_4x_resnet18_runs_11_8_10_9.csv", index=False)
+        df.to_csv(f"{self.submissions_dir}/ensemble_3x_resnet18_runs_19_29_31.csv", index=False)
 
     def run(self):
         random.seed(42)
@@ -212,5 +212,5 @@ if __name__ == '__main__':
         params = yaml.load(file, yaml.Loader)
 
     runner = Runner(params)
-    runner.run()
-    # runner.predict_ensemble()
+    # runner.run()
+    runner.predict_ensemble()
