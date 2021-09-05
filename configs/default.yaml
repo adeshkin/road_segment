@@ -6,7 +6,7 @@ checkpoint_dir: 'checkpoints_folds'
 submission_dir: 'submissions_folds'
 arch: 'resnet18' #
 num_splits: 5
-batch_size: 16
+batch_size: 128
 device: 'cuda'
 num_epochs: 32
 lr: 0.001

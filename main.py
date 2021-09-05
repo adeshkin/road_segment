@@ -133,8 +133,7 @@ class Runner:
                 self.model = torchvision.models.__dict__[self.params['arch']](pretrained=True)
                 self.model.fc = nn.Linear(self.model.fc.in_features, 1)
             elif 'efficientnet' in self.params['arch']:
-                self.model = EfficientNet
-                EfficientNet.from_pretrained(self.params['arch'])
+                self.model = EfficientNet.from_pretrained(self.params['arch'])
                 self.model._fc = nn.Linear(in_features=self.model._fc.in_features, out_features=1, bias=True)
 
             self.model = self.model.to(self.device)
