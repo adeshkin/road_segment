@@ -14,7 +14,7 @@ from efficientnet_pytorch import EfficientNet
 from sklearn.model_selection import StratifiedKFold
 
 from dataset import RoadSegment, RoadSegmentTest, RoadSegmentFolds
-from utils import calculate_accuracy, get_transform, read_data, calculate_auc_score, set_seed
+from utils import calculate_accuracy, get_transform, calculate_auc_score, set_seed
 
 
 class Runner:
@@ -130,10 +130,10 @@ class Runner:
                                                    shuffle=False,
                                                    num_workers=4)}
 
-            self.model = torchvision.models.__dict__[self.params['arch']](pretrained=True)
-            # EfficientNet.from_pretrained(self.params['arch'])
-            self.model.fc = nn.Linear(self.model.fc.in_features, 1)
-            # self.model._fc = nn.Linear(in_features=self.model._fc.in_features, out_features=1, bias=True)
+            # self.model = torchvision.models.__dict__[self.params['arch']](pretrained=True)
+            self.model =EfficientNet.from_pretrained(self.params['arch'])
+            # self.model.fc = nn.Linear(self.model.fc.in_features, 1)
+            self.model._fc = nn.Linear(in_features=self.model._fc.in_features, out_features=1, bias=True)
             self.model = self.model.to(self.device)
 
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=params["lr"])
@@ -163,8 +163,8 @@ class Runner:
 
     def predict_ensemble(self):
         models = []
-        for arch, path in zip(['resnet18', 'resnet18', 'resnet18'],
-                              ['major-pine-19', 'fiery-sound-29', 'chocolate-waterfall-31']):
+        for arch, path in zip(['resnet18', 'resnet18', 'resnet18', 'resnet18', 'resnet18'],
+                              ['stoic-spaceship-1', 'lyric-universe-2', 'playful-plant-3', 'devout-plasma-4', 'drawn-voice-5']):
             model = torchvision.models.__dict__[arch](pretrained=False)
             model.fc = nn.Linear(model.fc.in_features, 1)
             model.load_state_dict(torch.load(f"{self.checkpoints_dir}/{path}.pth"))
@@ -176,25 +176,32 @@ class Runner:
         with torch.no_grad():
             for image, image_id in tqdm(self.data_loaders['test']):
                 image = image.to(self.device)
-                ensemble_label = []
-                # ensemble_label = 1.0
+                if self.params['ensemble_mode'] == 'mean':
+                    ensemble_label = 0.0
+                elif self.params['ensemble_mode'] == 'geom':
+                    ensemble_label = 1.0
                 count = 0
                 for model in models:
                     pred_label = torch.sigmoid(model(image))
                     pred_label = pred_label.cpu().item()
-                    ensemble_label.append(pred_label)
-                    # ensemble_label *= pred_label
+                    if self.params['ensemble_mode'] == 'mean':
+                        ensemble_label += pred_label
+                    elif self.params['ensemble_mode'] == 'geom':
+                        ensemble_label *= pred_label
                     count += 1
 
-                prediction = sum(ensemble_label) / len(ensemble_label)
-                # prediction = np.power(ensemble_label, 1./count)
+                if self.params['ensemble_mode'] == 'mean':
+                    prediction = ensemble_label / count
+                elif self.params['ensemble_mode'] == 'geom':
+                    prediction = np.power(ensemble_label, 1./count)
+
                 row_dict = {}
                 row_dict["Image_ID"] = image_id[0]
                 row_dict["Target"] = prediction
                 results.append(row_dict)
 
         df = pd.DataFrame(results)
-        df.to_csv(f"{self.submissions_dir}/ensemble_3x_resnet18_runs_19_29_31_arith.csv", index=False)
+        df.to_csv(f"{self.submissions_dir}/ensemble_3x_resnet18_runs_1_5_{self.params['ensemble_mode']}.csv", index=False)
 
     def run(self):
         random.seed(42)
@@ -244,4 +251,4 @@ if __name__ == '__main__':
     runner = Runner(params)
     runner.run_folds()
     # runner.run()
-    # runner.predict_ensemble()
+    #runner.predict_ensemble()

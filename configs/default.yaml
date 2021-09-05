@@ -2,15 +2,13 @@ project_name: 'road_segment_folds'
 image_dir: 'data/Images'
 train_filepath: 'data/Train.csv'
 test_filepath: 'data/Test.csv'
-checkpoint_dir: 'checkpoints'
-submission_dir: 'submissions'
-arch: 'resnet18'
+checkpoint_dir: 'checkpoints_folds'
+submission_dir: 'submissions_folds'
+arch: 'efficientnet-b0' # resnet18
 num_splits: 5
-test_size: 0.05
-batch_size: 64
+batch_size: 32
 device: 'cuda'
-num_epochs: 5
+num_epochs: 24
 lr: 0.001
-lr_scheduler:
-  step_size: 10
-  gamma: 0.1
+ensemble_mode: 'mean' # geom
+
