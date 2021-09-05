@@ -129,20 +129,25 @@ class Runner:
                                                    shuffle=False,
                                                    num_workers=4)}
 
-            # self.model = torchvision.models.__dict__[self.params['arch']](pretrained=True)
-            self.model =EfficientNet.from_pretrained(self.params['arch'])
-            # self.model.fc = nn.Linear(self.model.fc.in_features, 1)
-            self.model._fc = nn.Linear(in_features=self.model._fc.in_features, out_features=1, bias=True)
+            if 'resnet' in self.params['arch']:
+                self.model = torchvision.models.__dict__[self.params['arch']](pretrained=True)
+                self.model.fc = nn.Linear(self.model.fc.in_features, 1)
+            elif 'efficientnet' in self.params['arch']:
+                self.model = EfficientNet.from_pretrained(self.params['arch'])
+                self.model._fc = nn.Linear(in_features=self.model._fc.in_features, out_features=1, bias=True)
+
             self.model = self.model.to(self.device)
 
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=params["lr"])
-
+            self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer,
+                                                                step_size=params['lr_scheduler']['step_size'],
+                                                                gamma=params['lr_scheduler']['gamma'])
             best_model_wts = copy.deepcopy(self.model.state_dict())
             best_auc = 0.
 
             for epoch in range(self.params['num_epochs']):
-
                 train_metrics = self.train()
+                self.lr_scheduler.step()
                 val_metrics = self.eval()
 
                 logs = {f'train': train_metrics,
@@ -162,10 +167,15 @@ class Runner:
 
     def predict_ensemble(self):
         models = []
-        for arch, path in zip(['resnet18', 'resnet18', 'resnet18', 'resnet18', 'resnet18'],
+        for arch, path in zip(['efficientnet-b0', 'efficientnet-b0', 'efficientnet-b0', 'efficientnet-b0', 'efficientnet-b0'],
                               ['stoic-spaceship-1', 'lyric-universe-2', 'playful-plant-3', 'devout-plasma-4', 'drawn-voice-5']):
-            model = torchvision.models.__dict__[arch](pretrained=False)
-            model.fc = nn.Linear(model.fc.in_features, 1)
+            if 'resnet' in self.params['arch']:
+                model = torchvision.models.__dict__[self.params['arch']](pretrained=True)
+                model.fc = nn.Linear(model.fc.in_features, 1)
+            elif 'efficientnet' in self.params['arch']:
+                model = EfficientNet.from_pretrained(self.params['arch'])
+                model._fc = nn.Linear(in_features=model._fc.in_features, out_features=1, bias=True)
+
             model.load_state_dict(torch.load(f"{self.checkpoints_dir}/{path}.pth"))
             model.to(self.device)
             model.eval()
@@ -248,6 +258,6 @@ if __name__ == '__main__':
         params = yaml.load(file, yaml.Loader)
 
     runner = Runner(params)
-    # runner.run_folds()
+    runner.run_folds()
     # runner.run()
-    runner.predict_ensemble()
+    # runner.predict_ensemble()
