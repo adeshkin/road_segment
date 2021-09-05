@@ -212,46 +212,6 @@ class Runner:
         df = pd.DataFrame(results)
         df.to_csv(f"{self.submissions_dir}/ensemble_5x_resnet18_last_dance_{self.params['ensemble_mode']}.csv", index=False)
 
-    def run(self):
-        random.seed(42)
-        np.random.seed(42)
-        torch.manual_seed(42)
-        torch.cuda.manual_seed_all(42)
-
-        torch.backends.cudnn.benchmark = False
-        torch.backends.cudnn.deterministic = True
-
-        wandb.init(project=self.params['project_name'], config=self.params)
-        self.run_name = wandb.run.name
-
-        os.makedirs(self.checkpoints_dir, exist_ok=True)
-        os.makedirs(self.submissions_dir, exist_ok=True)
-
-        best_model_wts = copy.deepcopy(self.model.state_dict())
-        best_auc = 0.
-
-        self.model = self.model.to(self.device)
-
-        for epoch in range(params['num_epochs']):
-            train_metrics = self.train()
-            # self.lr_scheduler.step()
-            val_metrics = self.eval()
-
-            logs = {'train': train_metrics,
-                    'val': val_metrics,
-                    'lr': self.optimizer.param_groups[0]["lr"]}
-
-            wandb.log(logs, step=epoch)
-
-            current_val_auc = val_metrics['auc']
-            if current_val_auc > best_auc:
-                best_auc = current_val_auc
-                best_model_wts = copy.deepcopy(self.model.state_dict())
-
-        self.model.load_state_dict(best_model_wts)
-        self.predict()
-        torch.save(self.model.state_dict(), f"{self.checkpoints_dir}/{self.run_name}.pth")
-
 
 if __name__ == '__main__':
     with open('./configs/default.yaml', 'r') as file:
