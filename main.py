@@ -219,7 +219,7 @@ class Runner:
                 results.append(row_dict)
 
         df = pd.DataFrame(results)
-        df.to_csv(f"{self.submissions_dir}/ensemble_5x_resnet18_last_dance_{self.params['ensemble_mode']}.csv", index=False)
+        df.to_csv(f"{self.submissions_dir}/ensemble_10x_last_dance_{self.params['ensemble_mode']}.csv", index=False)
 
 
 if __name__ == '__main__':
