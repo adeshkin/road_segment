@@ -1,12 +1,12 @@
-project_name: 'road_segment_folds_lr_scheduler'
+project_name: 'road_segment_folds_lr_scheduler_eff_b1'
 image_dir: 'data/Images'
 train_filepath: 'data/Train.csv'
 test_filepath: 'data/Test.csv'
 checkpoint_dir: 'checkpoints_folds'
 submission_dir: 'submissions_folds'
-arch: 'resnet34' # efficientnet-b0
+arch: 'efficientnet-b1' #
 num_splits: 5
-batch_size: 64
+batch_size: 20
 device: 'cuda'
 num_epochs: 24
 lr: 0.001

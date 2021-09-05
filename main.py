@@ -169,11 +169,11 @@ class Runner:
         models = []
         for arch, path in zip(['resnet34', 'resnet34', 'resnet34', 'resnet34', 'resnet34'],
                               ['jumping-hill-10', 'dauntless-cloud-9', 'different-blaze-8', 'valiant-donkey-7', 'lilac-sponge-6']):
-            if 'resnet' in self.params['arch']:
-                model = torchvision.models.__dict__[self.params['arch']](pretrained=True)
+            if 'resnet' in arch:
+                model = torchvision.models.__dict__[arch]()
                 model.fc = nn.Linear(model.fc.in_features, 1)
-            elif 'efficientnet' in self.params['arch']:
-                model = EfficientNet.from_pretrained(self.params['arch'])
+            elif 'efficientnet' in arch:
+                model = EfficientNet.from_pretrained(arch)
                 model._fc = nn.Linear(in_features=model._fc.in_features, out_features=1, bias=True)
 
             model.load_state_dict(torch.load(f"{self.checkpoints_dir}/{path}.pth"))
@@ -258,6 +258,6 @@ if __name__ == '__main__':
         params = yaml.load(file, yaml.Loader)
 
     runner = Runner(params)
-    #runner.run_folds()
+    runner.run_folds()
     # runner.run()
-    runner.predict_ensemble()
+    #runner.predict_ensemble()
