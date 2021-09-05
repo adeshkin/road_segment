@@ -4,9 +4,9 @@ train_filepath: 'data/Train.csv'
 test_filepath: 'data/Test.csv'
 checkpoint_dir: 'checkpoints'
 submission_dir: 'submissions'
-arch: 'efficientnet-b0'
+arch: 'efficientnet-b1'
 test_size: 0.2
-batch_size: 32
+batch_size: 16
 device: 'cuda'
 num_epochs: 48
 lr: 0.001
