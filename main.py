@@ -185,6 +185,7 @@ class Runner:
         best_auc = 0.
 
         self.model = self.model.to(self.device)
+
         for epoch in range(params['num_epochs']):
             train_metrics = self.train()
             # self.lr_scheduler.step()
