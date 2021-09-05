@@ -1,4 +1,4 @@
-project_name: 'road_segment'
+project_name: 'road_segment_folds'
 image_dir: 'data/Images'
 train_filepath: 'data/Train.csv'
 test_filepath: 'data/Test.csv'
@@ -7,9 +7,9 @@ submission_dir: 'submissions'
 arch: 'resnet18'
 num_splits: 5
 test_size: 0.05
-batch_size: 32
+batch_size: 64
 device: 'cuda'
-num_epochs: 32
+num_epochs: 8
 lr: 0.001
 lr_scheduler:
   step_size: 10

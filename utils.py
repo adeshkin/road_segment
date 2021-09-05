@@ -1,6 +1,7 @@
 import torch
 import cv2
 import random
+import numpy as np
 import pandas as pd
 import copy
 import matplotlib.pyplot as plt
@@ -9,6 +10,15 @@ from albumentations.pytorch.transforms import ToTensorV2
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
 
+
+def set_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
 
 def calculate_auc_score(output, target):
     fpr, tpr, thresholds = metrics.roc_curve(target, output, pos_label=1)

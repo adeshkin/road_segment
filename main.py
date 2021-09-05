@@ -14,7 +14,7 @@ from efficientnet_pytorch import EfficientNet
 from sklearn.model_selection import StratifiedKFold
 
 from dataset import RoadSegment, RoadSegmentTest, RoadSegmentFolds
-from utils import calculate_accuracy, get_transform, read_data, calculate_auc_score
+from utils import calculate_accuracy, get_transform, read_data, calculate_auc_score, set_seed
 
 
 class Runner:
@@ -23,11 +23,12 @@ class Runner:
         self.run_name = None
 
         self.device = torch.device(params['device'])
-
         self.criterion = nn.BCEWithLogitsLoss()
 
         self.checkpoints_dir = params['checkpoint_dir']
         self.submissions_dir = params['submission_dir']
+        os.makedirs(self.checkpoints_dir, exist_ok=True)
+        os.makedirs(self.submissions_dir, exist_ok=True)
 
     def train(self):
         self.model.train()
@@ -58,77 +59,6 @@ class Runner:
 
         return epoch_metrics
 
-    def run_folds(self):
-        random.seed(42)
-        np.random.seed(42)
-        torch.manual_seed(42)
-        torch.cuda.manual_seed_all(42)
-
-        torch.backends.cudnn.benchmark = False
-        torch.backends.cudnn.deterministic = True
-
-        wandb.init(project=self.params['project_name'], config=self.params)
-        self.run_name = wandb.run.name
-
-        os.makedirs(self.checkpoints_dir, exist_ok=True)
-        os.makedirs(self.submissions_dir, exist_ok=True)
-
-        transforms = get_transform()
-
-        test_df = pd.read_csv(self.params['test_filepath'])
-        dataset_test = RoadSegmentTest(test_df, self.params['image_dir'], transforms['val'])
-        self.data_loader_test = DataLoader(dataset_test,
-                                           batch_size=1,
-                                           shuffle=False,
-                                           num_workers=1)
-
-        df = pd.read_csv(self.params['train_filepath'])
-        X = df['Image_ID']
-        y = df['Target']
-        skf = StratifiedKFold(n_splits=self.params['num_splits'], shuffle=True, random_state=42)
-
-        for k, (train_index, test_index) in enumerate(skf.split(X, y)):
-            X_train, X_test = X[train_index], X[test_index]
-            y_train, y_test = y[train_index], y[test_index]
-            dataset_train = RoadSegmentFolds(X_train, y_train, self.params['image_dir'], transforms['train'])
-            dataset_val = RoadSegmentFolds(X_test, y_test, self.params['image_dir'], transforms['val'])
-
-            self.data_loaders = {'train': DataLoader(dataset_train,
-                                                     batch_size=params['batch_size'],
-                                                     shuffle=True,
-                                                     num_workers=4),
-                                 'val': DataLoader(dataset_val,
-                                                   batch_size=params['batch_size'],
-                                                   shuffle=False,
-                                                   num_workers=4)}
-
-            self.model = torchvision.models.__dict__[self.params['arch']](pretrained=True) # EfficientNet.from_pretrained(self.params['arch'])
-            self.model.fc = nn.Linear(self.model.fc.in_features, 1) # self.model._fc = nn.Linear(in_features=self.model._fc.in_features, out_features=1, bias=True)
-
-            self.model = self.model.to(self.device)
-            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=params["lr"])
-            best_model_wts = copy.deepcopy(self.model.state_dict())
-            best_auc = 0.
-
-            for epoch in range(self.params['num_epochs']):
-                train_metrics = self.train()
-                val_metrics = self.eval()
-
-                logs = {f'train_{k}': train_metrics,
-                        f'val_{k}': val_metrics}
-
-                wandb.log(logs, step=epoch)
-
-                current_val_auc = val_metrics['auc']
-                if current_val_auc > best_auc:
-                    best_auc = current_val_auc
-                    best_model_wts = copy.deepcopy(self.model.state_dict())
-
-            self.model.load_state_dict(best_model_wts)
-            torch.save(self.model.state_dict(), f"{self.checkpoints_dir}/{self.run_name}_{k}.pth")
-            self.predict(k)
-
-
     def eval(self):
         epoch_metrics = dict()
         epoch_metrics['loss'] = 0.0
@@ -154,10 +84,7 @@ class Runner:
 
         return epoch_metrics
 
-    def predict(self, k):
-        # PATH = f"{self.checkpoints_dir}/{self.params['model_filename']}.pth"
-        # self.model.load_state_dict(torch.load(PATH))
-        # self.model.to(self.device)
+    def predict(self, k_fold):
         self.model.eval()
         results = []
         with torch.no_grad():
@@ -171,7 +98,68 @@ class Runner:
                 results.append(row_dict)
 
         df = pd.DataFrame(results)
-        df.to_csv(f"{self.submissions_dir}/{self.params['arch']}_{self.run_name}_{k}.csv", index=False)
+        df.to_csv(f"{self.submissions_dir}/{self.params['arch']}_{self.run_name}_{k_fold}.csv", index=False)
+
+    def run_folds(self):
+        set_seed()
+        transforms = get_transform()
+
+        test_df = pd.read_csv(self.params['test_filepath'])
+        dataset_test = RoadSegmentTest(test_df, self.params['image_dir'], transforms['val'])
+        self.data_loader_test = DataLoader(dataset_test, batch_size=1, shuffle=False, num_workers=1)
+
+        df = pd.read_csv(self.params['train_filepath'])
+        X = df['Image_ID']
+        y = df['Target']
+        skf = StratifiedKFold(n_splits=self.params['num_splits'], shuffle=True, random_state=42)
+
+        for k_fold, (train_index, test_index) in enumerate(skf.split(X, y)):
+            wandb.init(project=self.params['project_name'], config=self.params)
+            self.run_name = wandb.run.name
+
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            dataset_train = RoadSegmentFolds(X_train, y_train, self.params['image_dir'], transforms['train'])
+            dataset_val = RoadSegmentFolds(X_test, y_test, self.params['image_dir'], transforms['val'])
+
+            self.data_loaders = {'train': DataLoader(dataset_train,
+                                                     batch_size=params['batch_size'],
+                                                     shuffle=True,
+                                                     num_workers=4),
+                                 'val': DataLoader(dataset_val,
+                                                   batch_size=params['batch_size'],
+                                                   shuffle=False,
+                                                   num_workers=4)}
+
+            self.model = torchvision.models.__dict__[self.params['arch']](pretrained=True)
+            # EfficientNet.from_pretrained(self.params['arch'])
+            self.model.fc = nn.Linear(self.model.fc.in_features, 1)
+            # self.model._fc = nn.Linear(in_features=self.model._fc.in_features, out_features=1, bias=True)
+            self.model = self.model.to(self.device)
+
+            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=params["lr"])
+
+            best_model_wts = copy.deepcopy(self.model.state_dict())
+            best_auc = 0.
+
+            for epoch in range(self.params['num_epochs']):
+
+                train_metrics = self.train()
+                val_metrics = self.eval()
+
+                logs = {f'train_{k_fold}': train_metrics,
+                        f'val_{k_fold}': val_metrics}
+
+                wandb.log(logs, step=epoch)
+
+                current_val_auc = val_metrics['auc']
+                if current_val_auc > best_auc:
+                    best_auc = current_val_auc
+                    best_model_wts = copy.deepcopy(self.model.state_dict())
+
+            self.model.load_state_dict(best_model_wts)
+            torch.save(self.model.state_dict(), f"{self.checkpoints_dir}/{self.run_name}_{k_fold}.pth")
+            self.predict(k_fold)
 
     def predict_ensemble(self):
         models = []
