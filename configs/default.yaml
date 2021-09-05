@@ -4,11 +4,11 @@ train_filepath: 'data/Train.csv'
 test_filepath: 'data/Test.csv'
 checkpoint_dir: 'checkpoints'
 submission_dir: 'submissions'
-arch: 'efficientnet-b1'
-test_size: 0.2
+arch: 'efficientnet-b0'
+test_size: 0.05
 batch_size: 16
 device: 'cuda'
-num_epochs: 48
+num_epochs: 32
 lr: 0.001
 lr_scheduler:
   step_size: 10

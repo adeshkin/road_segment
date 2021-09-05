@@ -191,7 +191,7 @@ class Runner:
 
         for epoch in range(params['num_epochs']):
             train_metrics = self.train()
-            self.lr_scheduler.step()
+            # self.lr_scheduler.step()
             val_metrics = self.eval()
 
             logs = {'train': train_metrics,
