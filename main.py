@@ -147,7 +147,7 @@ class Runner:
             for image, image_id in tqdm(self.data_loaders['test']):
                 image = image.to(self.device)
                 ensemble_label = []
-                ensemble_label = 1.0
+                #ensemble_label = 1.0
                 count = 0
                 for model in models:
                     pred_label = torch.sigmoid(model(image))
