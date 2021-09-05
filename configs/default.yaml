@@ -1,4 +1,4 @@
-project_name: 'road_segment_folds'
+project_name: 'road_segment_folds_lr_scheduler'
 image_dir: 'data/Images'
 train_filepath: 'data/Train.csv'
 test_filepath: 'data/Test.csv'
