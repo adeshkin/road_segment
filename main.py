@@ -258,6 +258,6 @@ if __name__ == '__main__':
         params = yaml.load(file, yaml.Loader)
 
     runner = Runner(params)
-    #runner.run_folds()
+    runner.run_folds()
     # runner.run()
-    runner.predict_ensemble()
+    #runner.predict_ensemble()

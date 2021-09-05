@@ -4,7 +4,7 @@ train_filepath: 'data/Train.csv'
 test_filepath: 'data/Test.csv'
 checkpoint_dir: 'checkpoints_folds'
 submission_dir: 'submissions_folds'
-arch: 'efficientnet-b1' #
+arch: 'efficientnet-b2' #
 num_splits: 5
 batch_size: 20
 device: 'cuda'
