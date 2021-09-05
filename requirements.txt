@@ -9,3 +9,4 @@ albumentations
 wandb
 tqdm
 scikit-learn
+efficientnet_pytorch

@@ -4,8 +4,8 @@ train_filepath: 'data/Train.csv'
 test_filepath: 'data/Test.csv'
 checkpoint_dir: 'checkpoints'
 submission_dir: 'submissions'
-arch: 'resnet18'
-test_size: 0.15
+arch: 'efficientnet-b0'
+test_size: 0.2
 batch_size: 32
 device: 'cuda'
 num_epochs: 48

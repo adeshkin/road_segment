@@ -10,7 +10,7 @@ import torchvision
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-
+from efficientnet_pytorch import EfficientNet
 
 from dataset import RoadSegment, RoadSegmentTest
 from utils import calculate_accuracy, get_transform, read_data, calculate_auc_score
@@ -44,8 +44,11 @@ class Runner:
                                                 shuffle=False,
                                                 num_workers=1)}
 
-        self.model = torchvision.models.__dict__[params['arch']](pretrained=True)
-        self.model.fc = nn.Linear(self.model.fc.in_features, 1)
+        #self.model = torchvision.models.__dict__[params['arch']](pretrained=True)
+        #self.model.fc = nn.Linear(self.model.fc.in_features, 1)
+
+        self.model = EfficientNet.from_pretrained(params['arch'])
+        self.model._fc = nn.Linear(in_features=self.model._fc.in_features, out_features=1, bias=True)
 
         self.device = torch.device(params['device'])
 
@@ -212,5 +215,5 @@ if __name__ == '__main__':
         params = yaml.load(file, yaml.Loader)
 
     runner = Runner(params)
-    # runner.run()
-    runner.predict_ensemble()
+    runner.run()
+    #runner.predict_ensemble()
