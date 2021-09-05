@@ -1,4 +1,5 @@
 import yaml
+import sys
 import os
 import copy
 import random
@@ -167,8 +168,16 @@ class Runner:
 
     def predict_ensemble(self):
         models = []
-        for arch, path in zip(['resnet18', 'resnet18', 'resnet18', 'resnet18', 'resnet18'],
-                              ['atomic-moon-1', 'fancy-jazz-2', 'balmy-frost-3', 'vocal-gorge-4', 'gentle-eon-5']):
+        if self.params['pred_mode'] == '10x':
+            model_names = ['efficientnet-b2', 'efficientnet-b2', 'efficientnet-b2', 'efficientnet-b2', 'efficientnet-b2',
+                  'resnet18', 'resnet18', 'resnet18', 'resnet18', 'resnet18']
+            checkpoint_paths = ['glamorous-plant-6', 'pleasant-bush-8', 'soft-breeze-10', 'comic-pyramid-12', 'quiet-blaze-14',
+                  'lyric-water-1', 'lively-dew-3', 'vague-sun-2', 'confused-breeze-4', 'snowy-hill-5']
+        elif self.params['pred_mode'] == '5x':
+            model_names = ['resnet18', 'resnet18', 'resnet18', 'resnet18', 'resnet18']
+            checkpoint_paths = ['lyric-water-1', 'lively-dew-3', 'vague-sun-2', 'confused-breeze-4', 'snowy-hill-5']
+
+        for arch, path in zip(model_names, checkpoint_paths):
             if 'resnet' in arch:
                 model = torchvision.models.__dict__[arch]()
                 model.fc = nn.Linear(model.fc.in_features, 1)
@@ -214,9 +223,10 @@ class Runner:
 
 
 if __name__ == '__main__':
-    with open('./configs/default.yaml', 'r') as file:
+    config_filename = sys.argv[1]
+    with open(f'./configs/{config_filename}.yaml', 'r') as file:
         params = yaml.load(file, yaml.Loader)
 
     runner = Runner(params)
     # runner.run_folds()
-    runner.predict_ensemble()
+    # runner.predict_ensemble()

@@ -1,0 +1,17 @@
+project_name: 'road_segment_folds_lr_scheduler_resnet18_last_dance'
+image_dir: 'data/Images'
+train_filepath: 'data/Train.csv'
+test_filepath: 'data/Test.csv'
+checkpoint_dir: 'checkpoints_folds'
+submission_dir: 'submissions_folds'
+arch: 'resnet18'
+num_splits: 5
+batch_size: 128
+device: 'cuda'
+num_epochs: 32
+lr: 0.001
+ensemble_mode: 'geom'
+lr_scheduler:
+  step_size: 15
+  gamma: 0.1
+pred_mode: '10x'
