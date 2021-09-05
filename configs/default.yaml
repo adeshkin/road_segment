@@ -5,11 +5,11 @@ test_filepath: 'data/Test.csv'
 checkpoint_dir: 'checkpoints'
 submission_dir: 'submissions'
 arch: 'resnet18'
-test_size: 0.2
-batch_size: 16
+test_size: 0.3
+batch_size: 32
 device: 'cuda'
-num_epochs: 32
-lr: 0.01
+num_epochs: 48
+lr: 0.001
 lr_scheduler:
   step_size: 5
   gamma: 0.5
