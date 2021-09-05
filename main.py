@@ -85,7 +85,7 @@ class Runner:
         df = pd.read_csv(self.params['train_filepath'])
         X = df['Image_ID']
         y = df['Target']
-        skf = StratifiedKFold(n_splits=self.params['num_splits'])
+        skf = StratifiedKFold(n_splits=self.params['num_splits'], shuffle=True, random_state=42)
 
         for k, (train_index, test_index) in enumerate(skf.split(X, y)):
             X_train, X_test = X[train_index], X[test_index]
@@ -102,11 +102,8 @@ class Runner:
                                                    shuffle=False,
                                                    num_workers=4)}
 
-            self.model = torchvision.models.__dict__[self.params['arch']](pretrained=True)
-            self.model.fc = nn.Linear(self.model.fc.in_features, 1)
-
-            #self.model = EfficientNet.from_pretrained(self.params['arch'])
-            #self.model._fc = nn.Linear(in_features=self.model._fc.in_features, out_features=1, bias=True)
+            self.model = torchvision.models.__dict__[self.params['arch']](pretrained=True) # EfficientNet.from_pretrained(self.params['arch'])
+            self.model.fc = nn.Linear(self.model.fc.in_features, 1) # self.model._fc = nn.Linear(in_features=self.model._fc.in_features, out_features=1, bias=True)
 
             self.model = self.model.to(self.device)
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=params["lr"])
