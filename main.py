@@ -229,4 +229,4 @@ if __name__ == '__main__':
 
     runner = Runner(params)
     # runner.run_folds()
-    # runner.predict_ensemble()
+    runner.predict_ensemble()
