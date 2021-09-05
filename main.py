@@ -20,7 +20,11 @@ from utils import calculate_accuracy, get_transform, calculate_auc_score, set_se
 class Runner:
     def __init__(self, params):
         self.params = params
-        self.run_name = None
+        self.transforms = get_transform()
+
+        test_df = pd.read_csv(self.params['test_filepath'])
+        dataset_test = RoadSegmentTest(test_df, self.params['image_dir'], self.transforms['val'])
+        self.data_loader_test = DataLoader(dataset_test, batch_size=1, shuffle=False, num_workers=1)
 
         self.device = torch.device(params['device'])
         self.criterion = nn.BCEWithLogitsLoss()
@@ -102,11 +106,6 @@ class Runner:
 
     def run_folds(self):
         set_seed()
-        transforms = get_transform()
-
-        test_df = pd.read_csv(self.params['test_filepath'])
-        dataset_test = RoadSegmentTest(test_df, self.params['image_dir'], transforms['val'])
-        self.data_loader_test = DataLoader(dataset_test, batch_size=1, shuffle=False, num_workers=1)
 
         df = pd.read_csv(self.params['train_filepath'])
         X = df['Image_ID']
@@ -118,8 +117,8 @@ class Runner:
             self.run_name = run.name
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
-            dataset_train = RoadSegmentFolds(X_train, y_train, self.params['image_dir'], transforms['train'])
-            dataset_val = RoadSegmentFolds(X_test, y_test, self.params['image_dir'], transforms['val'])
+            dataset_train = RoadSegmentFolds(X_train, y_train, self.params['image_dir'], self.transforms['train'])
+            dataset_val = RoadSegmentFolds(X_test, y_test, self.params['image_dir'], self.transforms['val'])
 
             self.data_loaders = {'train': DataLoader(dataset_train,
                                                      batch_size=params['batch_size'],
@@ -174,7 +173,7 @@ class Runner:
 
         results = []
         with torch.no_grad():
-            for image, image_id in tqdm(self.data_loaders['test']):
+            for image, image_id in tqdm(self.data_loader_test):
                 image = image.to(self.device)
                 if self.params['ensemble_mode'] == 'mean':
                     ensemble_label = 0.0
@@ -201,7 +200,7 @@ class Runner:
                 results.append(row_dict)
 
         df = pd.DataFrame(results)
-        df.to_csv(f"{self.submissions_dir}/ensemble_3x_resnet18_runs_1_5_{self.params['ensemble_mode']}.csv", index=False)
+        df.to_csv(f"{self.submissions_dir}/ensemble_5x_resnet18_runs_1_5_{self.params['ensemble_mode']}.csv", index=False)
 
     def run(self):
         random.seed(42)
@@ -249,6 +248,6 @@ if __name__ == '__main__':
         params = yaml.load(file, yaml.Loader)
 
     runner = Runner(params)
-    runner.run_folds()
+    # runner.run_folds()
     # runner.run()
-    #runner.predict_ensemble()
+    runner.predict_ensemble()
