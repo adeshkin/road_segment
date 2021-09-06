@@ -166,7 +166,7 @@ class Runner:
             self.predict()
             run.finish()
 
-    def predict_ensemble(self):
+    def predict_ensemble(self, ):
         models = []
         if self.params['pred_mode'] == '10x':
             model_names = ['efficientnet-b2', 'efficientnet-b2', 'efficientnet-b2', 'efficientnet-b2', 'efficientnet-b2',
@@ -219,7 +219,7 @@ class Runner:
                 results.append(row_dict)
 
         df = pd.DataFrame(results)
-        df.to_csv(f"{self.submissions_dir}/ensemble_10x_last_dance_{self.params['ensemble_mode']}.csv", index=False)
+        df.to_csv(f"{self.submissions_dir}/{config_filename}.csv", index=False)
 
 
 if __name__ == '__main__':
@@ -229,4 +229,4 @@ if __name__ == '__main__':
 
     runner = Runner(params)
     # runner.run_folds()
-    runner.predict_ensemble()
+    runner.predict_ensemble(config_filename)
