@@ -1,15 +1,15 @@
 
-### Environment (python3.6):
+#### Environment (python3.6):
 ```
 pip install -r requirements.txt
 ```
 
-### Predict (ensemble_10x_efficientnet-b2_resnet18_geom.csv):
+#### Predict (./submissions_folds/ensemble_10x.csv):
 ```
 python main.py ensemble_10x
 ```
 
-### Predict (ensemble_5x_resnet18_runs_1_5_lr_sched_geom.csv):
+#### Predict (./submissions_folds/ensemble_5x.csv):
 ```
 python main.py ensemble_5x
 ```
