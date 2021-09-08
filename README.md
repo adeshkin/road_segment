@@ -1,9 +1,9 @@
 # Road Segment Identification Hackathon: 7th place solution
 
-####TASK - to identify whether an image contains a road segment or not.
+#### TASK - to identify whether an image contains a road segment or not.
 ![header](images/example.png)
 
-- 🛆[Road Segment Identification Hackathon](https://zindi.africa/hackathons/road-segment-identification-challenge)
+- [Road Segment Identification Hackathon](https://zindi.africa/hackathons/road-segment-identification-challenge)
 
 
 ## Dataset
