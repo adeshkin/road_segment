@@ -29,14 +29,10 @@ python main.py default
 ```
 
 ## Submit
-- `./submissions_folds/ensemble_10x.csv`:
 ```bash
 python main.py ensemble_10x
 ```
-- `./submissions_folds/ensemble_5x.csv`:
-```bash
-python main.py ensemble_5x
-```
+
 
 
 
