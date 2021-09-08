@@ -1,6 +1,7 @@
 # Road Segment Identification Hackathon: 7th place solution
 
-![header](images/header.png)
+####TASK - to identify whether an image contains a road segment or not.
+![header](images/example.png)
 
 - 🛆[Road Segment Identification Hackathon](https://zindi.africa/hackathons/road-segment-identification-challenge)
 
@@ -10,6 +11,7 @@
 Download
 [dataset](https://zindi.africa/hackathons/road-segment-identification-challenge/data)
 
+
 ## Environment:
 ```bash
 git clone https://github.com/adeshkin/road_segment.git 
@@ -18,6 +20,8 @@ python3 -m venv ./venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
+
+
 ## Training
 
 ```bash
