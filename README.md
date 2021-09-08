@@ -14,8 +14,8 @@ Download
 ## Solution:
 
 Ensemble of 10 models:
-* resnet18 and efficientnet-b1 trained on 5 folds of train set respectively
-* geometric mean
+* _resnet18_ and _efficientnet-b1_ trained on 5 folds of train set respectively
+* _geometric_ mean
 
 ## Environment:
 ```bash
