@@ -11,6 +11,11 @@
 Download
 [dataset](https://zindi.africa/hackathons/road-segment-identification-challenge/data)
 
+## Solution:
+
+Ensemble of 10 models:
+* resnet18 and efficientnet-b1 trained on 5 folds of train set respectively
+* geometric mean
 
 ## Environment:
 ```bash
