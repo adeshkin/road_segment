@@ -2,7 +2,6 @@ import yaml
 import sys
 import os
 import copy
-import random
 import numpy as np
 import pandas as pd
 import wandb
@@ -228,5 +227,7 @@ if __name__ == '__main__':
         params = yaml.load(file, yaml.Loader)
 
     runner = Runner(params)
-    # runner.run_folds()
-    runner.predict_ensemble(config_filename)
+    if config_filename == 'default':
+        runner.run_folds()
+    else:
+        runner.predict_ensemble(config_filename)
