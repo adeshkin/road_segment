@@ -39,14 +39,3 @@ auc score ~ 0.9677
 ```bash
 python main.py ensemble_10x
 ```
-
-## Log examples:
-![](./images/val_auc.png)
-
-
-
-
-
-
-
-
